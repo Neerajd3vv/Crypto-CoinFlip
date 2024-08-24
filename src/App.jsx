@@ -3,7 +3,7 @@ import { ethers } from "ethers";
 import React, { useState, useEffect } from "react";
 import coinFlipAbi from "./coinFlipAbi.json";
 
-const contractAddress = "0x04aEE09De3a56800CDB69EF4d6c75F34C6CF9D24";
+const contractAddress = "0x1771e539a0D0f3A4A9f3972A6E7371Af2a5D854B";
 
 function App() {
   const [balance, setBalance] = useState("0");
@@ -13,7 +13,6 @@ function App() {
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  // Initialising  provider and contract only if MetaMask is present
   const [provider, setProvider] = useState(null);
   const [contract, setContract] = useState(null);
 
@@ -72,36 +71,23 @@ function App() {
     }
   };
 
-  const deposit = async () => {
-    if (contract) {
-      try {
-        const transaction = await contract.deposit({
-          value: ethers.utils.parseEther(amount),
-        });
-        await transaction.wait();
-        getBalance();
-        setTransactions([
-          ...transactions,
-          { type: "Deposit", amount, result: "Success" },
-        ]);
-      } catch (error) {
-        setTransactions([
-          ...transactions,
-          { type: "Deposit", amount, result: "Failed" },
-        ]);
-      }
-    }
-  };
-
   const flipCoin = async () => {
-    if (contract) {
+    if (contract && amount) {
       try {
         setLoading(true);
-        const transaction = await contract.flipCoin(choice, {
+
+        // Step 1: Deposit the amount
+        const depositTx = await contract.deposit({
           value: ethers.utils.parseEther(amount),
         });
-        const receipt = await transaction.wait();
-        const win = receipt.events?.some(
+        await depositTx.wait();
+
+        // Step 2: Flip the coin
+        const flipTx = await contract.flipCoin(choice);
+        const receipt = await flipTx.wait();
+
+        // Assuming the contract emits an event for the result
+        const win = receipt.events.some(
           (event) =>
             event.event === "CoinFlipResult" && event.args.result === choice
         );
@@ -131,6 +117,7 @@ function App() {
 
         getBalance();
       } catch (error) {
+        console.error("Failed to flip the coin:", error);
         setTransactions([
           ...transactions,
           { type: "Flip Coin", amount, result: "Failed" },
@@ -169,12 +156,6 @@ function App() {
                 onChange={(e) => setAmount(e.target.value)}
                 className="w-full border border-gray-300 p-4 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300"
               />
-              <button
-                onClick={deposit}
-                className="bg-green-600 font-semibold text-white py-2 px-4 rounded-full shadow-md hover:bg-green-700 w-full"
-              >
-                Bet Amount
-              </button>
               <div className="flex justify-center space-x-6">
                 <label className="flex items-center space-x-2 cursor-pointer">
                   <input
@@ -207,6 +188,7 @@ function App() {
                 <button
                   onClick={flipCoin}
                   className="bg-red-600 font-semibold text-white py-2 px-4 rounded-full shadow-md hover:bg-red-700 w-full"
+                  disabled={loading}
                 >
                   Flip Coin
                 </button>
@@ -229,35 +211,24 @@ function App() {
                     xmlns="http://www.w3.org/2000/svg"
                   >
                     <path
-                      d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z"
+                      d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908Z"
                       fill="currentColor"
                     />
                     <path
-                      d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.06326 38.0059 6.38002C38.1463 8.34047 40.4735 9.74595 42.5391 9.69367C46.5856 9.58629 50.6869 9.984 54.6323 10.9513C58.5777 11.9187 62.2534 13.4193 65.7572 15.3843C68.9414 17.054 71.9461 19.1858 74.6882 21.5736C76.7071 23.4464 78.5063 25.6018 80.0375 27.9642C81.1606 29.4516 82.0737 31.1258 82.6817 32.8869C82.9034 33.8727 84.4304 34.2988 85.6915 33.6683C88.6741 32.486 91.5371 30.7131 93.9676 28.0318V39.0409Z"
+                      d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5537C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7233 75.2124 7.41289C69.5422 4.10251 63.2754 1.94025 56.7221 1.05117C51.7663 0.367515 46.7355 0.446996 41.8234 1.27873C39.3072 1.6942 37.8173 4.19778 38.4544 6.62326C39.0915 9.04874 41.5741 10.5181 43.9995 9.90262C48.2298 9.00103 52.6142 9.00073 56.8638 9.86978C61.8727 10.8218 66.6278 12.7973 70.8253 15.6867C75.0229 18.576 78.5912 22.3222 81.3117 26.7385C83.606 30.2747 85.2295 34.2267 86.1145 38.3296C86.6818 40.7859 89.5421 42.0109 91.9676 41.3738Z"
                       fill="currentFill"
                     />
                   </svg>
                 </div>
               ) : (
-                <ul className="list-disc list-inside p-4 bg-slate-100 rounded-lg">
-                  {transactions.map((transaction, index) => (
-                    <li
-                      key={index}
-                      className={`flex justify-between p-2 ${
-                        transaction.result === "Success"
-                          ? "text-green-600"
-                          : transaction.result === "Failed"
-                          ? "text-red-600"
-                          : "text-gray-800"
-                      }`}
-                    >
-                      <span>
-                        {transaction.type}: {transaction.amount} ETH
-                      </span>
-                      <span>{transaction.result}</span>
-                    </li>
-                  ))}
-                </ul>
+                transactions.map((tx, index) => (
+                  <div
+                    key={index}
+                    className="border-b border-gray-300 py-2 px-4 text-gray-700"
+                  >
+                    {tx.type} - {tx.amount} ETH: {tx.result}
+                  </div>
+                ))
               )}
             </div>
           </div>

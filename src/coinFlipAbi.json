@@ -1,4 +1,4 @@
- [
+[
 		{
 			"inputs": [],
 			"stateMutability": "nonpayable",
@@ -40,7 +40,7 @@
 			],
 			"name": "flipCoin",
 			"outputs": [],
-			"stateMutability": "payable",
+			"stateMutability": "nonpayable",
 			"type": "function"
 		},
 		{
