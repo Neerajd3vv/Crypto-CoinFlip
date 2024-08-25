@@ -5,14 +5,46 @@
 			"type": "constructor"
 		},
 		{
+			"anonymous": false,
 			"inputs": [
 				{
+					"indexed": true,
 					"internalType": "address",
-					"name": "",
+					"name": "player",
 					"type": "address"
+				},
+				{
+					"indexed": false,
+					"internalType": "uint256",
+					"name": "amount",
+					"type": "uint256"
+				},
+				{
+					"indexed": false,
+					"internalType": "bool",
+					"name": "win",
+					"type": "bool"
 				}
 			],
-			"name": "balances",
+			"name": "CoinFlipped",
+			"type": "event"
+		},
+		{
+			"inputs": [
+				{
+					"internalType": "bool",
+					"name": "_heads",
+					"type": "bool"
+				}
+			],
+			"name": "flipCoin",
+			"outputs": [],
+			"stateMutability": "payable",
+			"type": "function"
+		},
+		{
+			"inputs": [],
+			"name": "getBalance",
 			"outputs": [
 				{
 					"internalType": "uint256",
@@ -21,26 +53,6 @@
 				}
 			],
 			"stateMutability": "view",
-			"type": "function"
-		},
-		{
-			"inputs": [],
-			"name": "deposit",
-			"outputs": [],
-			"stateMutability": "payable",
-			"type": "function"
-		},
-		{
-			"inputs": [
-				{
-					"internalType": "bool",
-					"name": "chooseHeads",
-					"type": "bool"
-				}
-			],
-			"name": "flipCoin",
-			"outputs": [],
-			"stateMutability": "nonpayable",
 			"type": "function"
 		},
 		{
@@ -55,5 +67,22 @@
 			],
 			"stateMutability": "view",
 			"type": "function"
+		},
+		{
+			"inputs": [
+				{
+					"internalType": "uint256",
+					"name": "_amount",
+					"type": "uint256"
+				}
+			],
+			"name": "withdrawFunds",
+			"outputs": [],
+			"stateMutability": "nonpayable",
+			"type": "function"
+		},
+		{
+			"stateMutability": "payable",
+			"type": "receive"
 		}
 	]
